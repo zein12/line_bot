@@ -2,4 +2,4 @@
 /app/Plugin/*
 /app/tmp/*
 /app/Config/secret.yml
-
+.idea/*
