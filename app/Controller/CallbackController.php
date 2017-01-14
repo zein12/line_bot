@@ -8,23 +8,23 @@ class CallbackController extends AppController {
 		$this->autoRender = false;
 		$this->response->type('json');
 
-		$secrets = Configure::read('secrets.line');
 		$headers = [
 			"Content-Type: application/json; charset=UTF-8",
-			"Authorization: Bearer " . $secrets["access_token"]
+			"Authorization: Bearer <TOKEN>"
 		];
 
 		$events = $this->request->input('json_decode', true);
 
-		$replyMessage =  json_encode(
-			[
+		$tmp =  [
 				'replyToken' => Hash::get($events, 'events.0.replyToken'),
 				'messages' => [
-					'type' => Hash::get($events, 'events.0.message.type'),
-					'text' => Hash::get($events, 'events.0.message.type')
+					 [
+						'type' => Hash::get($events, 'events.0.message.type'),
+						'text' => Hash::get($events, 'events.0.message.type')
+					]
 				]
-			]
-		);
+		];
+		$replyMessage = json_encode($tmp);
 
 		$curl = curl_init('https://api.line.me/v2/bot/message/reply');
 		curl_setopt($curl, CURLOPT_POST, true);
