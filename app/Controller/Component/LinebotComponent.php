@@ -22,10 +22,11 @@ class LinebotComponent extends Component {
 				break;
 
 			case 'text':
-				if (Hash::get($events, 'events.0.message.text') === 'カルーセル')
+				if (Hash::get($events, 'events.0.message.text') === 'カルーセル') {
 					$replyMessage = $this->__carouselReplyMessage($events);
-				else 
+				} else {
 					$replyMessage = $this->__textReplyMessage($events);
+				}
 				break;
 
 			case 'carousel':
@@ -35,7 +36,6 @@ class LinebotComponent extends Component {
 			default:
 				if (Hash::get($events, 'events.0.type') === 'postback') {
 					$replyMessage = $this->__postbackReplyMessage($events);
-					break;
 				}
 				break;
 		}
@@ -54,7 +54,7 @@ class LinebotComponent extends Component {
 		$columns = [];
 
 		foreach ($results['results']['shop'] as $result) {
-			$detail = new MessageTemplateActionBuilder('詳細', 'aaaaaa');
+			$detail = new PostbackTemplateActionBuilder('詳細', 'action=detail');
 			$browser = new UriTemplateActionBuilder('Open in Browser', $result['urls']['pc']);
 			$maps = new PostbackTemplateActionBuilder('地図を見る', 'action=map&address=' . $result['address'] . '&lat=' . $result['lat'] . '&lng=' . $result['lng']);
 			$column = new CarouselColumnTemplateBuilder($result['name'], $result['catch'], $result['photo']['mobile']['l'], [$detail, $browser, $maps]);
@@ -73,9 +73,16 @@ class LinebotComponent extends Component {
 		$query = Hash::get($events, 'events.0.postback.data');
                 parse_str($query, $data);
 
-		if (isset($data['action'], $data['lat'], $data['lng']) && $data['action'] === 'map') {
-			$postback = new LocationMessageBuilder('お店の地図を表示します', $data['address'], $data['lat'], $data['lng']);
-			return $postback;
+		switch ($data['action']) {
+			case 'map':
+				$postback = new LocationMessageBuilder('お店の地図を表示します', $data['address'], $data['lat'], $data['lng']);
+				break;
+
+			case 'detail':
+				$postback = new TextMessageBuilder('予算とか細かいの載せる');
+				break;
 		}
+
+		return $postback;
 	}
 }
