@@ -4,10 +4,6 @@ App::uses('Component', 'Controller');
 
 class MecabComponent extends Component {
 
-        public function initialize(Controller $controller) {
-                $this->controller = $controller;
-        }
-
 	public function __isContainArea($text) {
                 $options = ['-d', '/usr/local/lib/mecab/dic/ipadic/'];
                 $mecab = new MeCab_Tagger($options);
@@ -20,6 +16,6 @@ class MecabComponent extends Component {
                         }
                 }
 		return $areas;
-        }	
+        }
 
 }
