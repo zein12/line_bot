@@ -4,6 +4,8 @@ App::uses('AppController', 'Controller');
 
 class CallbackController extends AppController {
 
+	public $components = ['Mecab'];
+
         public function index() {
                 $this->autoRender = false;
                 $this->response->type('json');
@@ -32,21 +34,10 @@ class CallbackController extends AppController {
 		} else {
 			$type = 'others';
 			$value = Hash::get($events, 'events.0.message.text');
-			$this->__isContainArea(Hash::get($events, 'events.0.message.text'));
+			$areas = $this->Mecab->__isContainArea($value);
 		}
 
 		return [ 'type' => $type, 'value' => $value ];
-	}
-
-	private function __isContainArea($text) {
-		$options = array('-d', '/usr/local/lib/mecab/dic/ipadic/');
-		$mecab = new MeCab_Tagger($options);
-		$nodes = $mecab->parseToNode($text);
-		foreach ($nodes as $n) {
-			$this->log($n->getSurface(), 'debug');
-			if (strpos($n->getFeature(), '地域') !== false){
- 			}
-		}
 	}
 
 	 private function __reply($replyMessage) {
