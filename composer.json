@@ -1,4 +1,3 @@
-
 {
     "name": "line_bot",
     "repositories": [
@@ -9,11 +8,9 @@
     ],
     "require": {
         "cakephp/cakephp": "2.6.2",
-	"linecorp/line-bot-sdk": "1.3.0"
+	"linecorp/line-bot-sdk": "^1.3"
     },
     "config": {
         "vendor-dir": "Vendor/"
     }
 }
-
-
