@@ -111,7 +111,9 @@ class CallbackController extends AppController {
                 $this->autoRender = false;
                 $this->response->type('json');
                 $events = $this->request->input('json_decode', true);
-                $output = $this->__reply($this->Linebot->buildReplyMessage($events));
+		$replyMessage = $this->Linebot->buildReplyMessage($events);
+		if ($replyMessage == null || empty($replyMessage)) { return $this->response->statusCode(200); }
+                $output = $this->__reply($replyMessage);
                 $this->log($output);
                 return $this->response->statusCode(200);
         }
