@@ -16,10 +16,14 @@ class LinebotComponent extends Component {
 	public $components = ['Mecab', 'ApiCall', 'Conversation'];
 
 	public function buildReplyMessage($events) {
-		$format = $this->Conversation->checkReplyFormat($events);
-		switch ($format) {
+		$type = $this->Conversation->checkReplyType($events);
+		switch ($type) {
 			case 'address':
-				$replyMessage = $this->__textReplyMessage($events);
+				$replyMessage = $this->__textReplyMessage($type);
+				break;
+
+			case 'genre':
+				$replyMessage = $this->__genreReplyMessage($events);
 				break;
 
 			case 'location':
@@ -29,13 +33,15 @@ class LinebotComponent extends Component {
 			case 'text':
 				if (Hash::get($events, 'events.0.message.text') === 'カルーセル') {
 					$replyMessage = $this->__carouselReplyMessage($events);
-				} else {
-					$replyMessage = $this->__textReplyMessage($events);
 				}
 				break;
 
 			case 'carousel':
 				$replyMessage = $this->__carouselReplyMessage($events);
+				break;
+
+			case 'not start':
+				$replyMessage = false;
 				break;
 
 			default:
@@ -44,12 +50,15 @@ class LinebotComponent extends Component {
 				}
 				break;
 		}
-
 		return $replyMessage;
 	}
 
-	private function __textReplyMessage($events) {
-		$textMessageBuilder = new TextMessageBuilder('お店をどこ周辺でお探しですか?');
+	private function __textReplyMessage($type) {
+		switch ($type) {
+			case 'address':
+				$textMessageBuilder = new TextMessageBuilder('お店をどこ周辺でお探しですか?');
+				break;
+		}	
 		return $textMessageBuilder;
 	}
 

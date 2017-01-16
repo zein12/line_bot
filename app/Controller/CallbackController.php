@@ -24,7 +24,6 @@ class CallbackController extends AppController {
 		$replyMessage = $this->Linebot->buildReplyMessage($events);
 		if ($replyMessage == null || empty($replyMessage)) { return $this->response->statusCode(200); }
                 $output = $this->__reply($replyMessage);
-                $this->log($output);
                 return $this->response->statusCode(200);
         }
 
