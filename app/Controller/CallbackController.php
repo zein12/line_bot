@@ -15,16 +15,13 @@ class CallbackController extends AppController {
         public function index() {
 		$line = Configure::read('line');
 		$events = $this->request->input('json_decode', true);
-
 		$this->httpClient = new CurlHTTPClient($line['accessToken']);
 		$this->bot = new LINEBot($this->httpClient, ['channelSecret' => $line['channelSecret']]);
 		$this->replyToken = Hash::get($events, 'events.0.replyToken');
-
-		$this->log($events, 'debug');
-
                 $this->autoRender = false;
                 $this->response->type('json');
                 $events = $this->request->input('json_decode', true);
+		$replyMessage = $this->Linebot->buildReplyMessage($events);
 		if ($replyMessage == null || empty($replyMessage)) { return $this->response->statusCode(200); }
                 $output = $this->__reply($replyMessage);
                 $this->log($output);
@@ -32,8 +29,6 @@ class CallbackController extends AppController {
         }
 
 	private function __reply($replyMessage) {
-		$this->log('replyToken: ' . $this->replyToken, 'debug');
-		$this->log($replyMessage, 'debug');
 		return $this->bot->replyMessage($this->replyToken, $replyMessage);
         }
 }

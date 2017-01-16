@@ -13,10 +13,15 @@ use LINE\LINEBot\MessageBuilder\TemplateMessageBuilder;
 use LINE\LINEBot\MessageBuilder\LocationMessageBuilder;
 
 class LinebotComponent extends Component {
-	public $components = ['Mecab', 'ApiCall'];
+	public $components = ['Mecab', 'ApiCall', 'Conversation'];
 
 	public function buildReplyMessage($events) {
-		switch (Hash::get($events, 'events.0.message.type')) {
+		$format = $this->Conversation->checkReplyFormat($events);
+		switch ($format) {
+			case 'address':
+				$replyMessage = $this->__textReplyMessage($events);
+				break;
+
 			case 'location':
 				$replyMessage = $this->__locationReplyMessage($events);
 				break;
@@ -44,8 +49,7 @@ class LinebotComponent extends Component {
 	}
 
 	private function __textReplyMessage($events) {
-		$textMessageBuilder = new TextMessageBuilder(Hash::get($events, 'events.0.message.type') . ':' . Hash::get($events, 'events.0.message.text'));
-
+		$textMessageBuilder = new TextMessageBuilder('お店をどこ周辺でお探しですか?');
 		return $textMessageBuilder;
 	}
 
@@ -68,8 +72,6 @@ class LinebotComponent extends Component {
 	}
 
 	private function __postbackReplyMessage($events) {
-		$this->log('POSTBACK', 'debug');
-		$this->log($events, 'debug');
 		$query = Hash::get($events, 'events.0.postback.data');
                 parse_str($query, $data);
 

@@ -12,7 +12,6 @@ class MecabComponent extends Component {
                 foreach ($nodes as $n) {
                         if (strpos($n->getFeature(), '地域') !== false) {
 				$areas[] = $n->getSurface();
-				$this->log($areas, 'debug');
                         }
                 }
 		return $areas;

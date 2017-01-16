@@ -3,3 +3,4 @@
 /app/tmp/*
 /app/Config/secret.yml
 .idea/*
+/app/Config/database.php
