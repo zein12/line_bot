@@ -28,7 +28,7 @@ class LinebotComponent extends Component {
 
 			case 'recommend':
 				$results = $this->Conversation->getQuery($events);
-				$replyMessage = $this->__carouselReplyMessage($results['address'], $results['genre_id']);
+				$replyMessage = $this->__carouselReplyMessage($results['target_area'], $results['genre_id']);
 				break;
 
 			case 'location':

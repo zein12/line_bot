@@ -86,11 +86,12 @@ class ConversationComponent extends Component {
 		$conversationInstance = ClassRegistry::init('Conversation');
                 $conversation = $conversationInstance->find('first', [
                         'conditions'=> [
-				'line_id' => $results['id']
+				'line_id' => $id,
+				'disabled' => 0
 			],
 		]);
 		return [
-			'address' => $conversation['Address']['address'],
+			'target_area' => $conversation['Address']['target_area'],
 			'genre_id' => $conversation['Genre']['genre_id']
 		];
 	}

@@ -16,7 +16,7 @@ class ApiCallComponent extends Component
     public function getStoreInfo($address, $genre) {
 	$address = urlencode($address);
 	$genre = urlencode($genre);
-        $url = $this->requestUrl . 'key=' . $this->apiKey . '&format=json&count=5&address='. $address .'&genre=' . $this->getGenreCode($genre);
+        $url = $this->requestUrl . 'key=' . $this->apiKey . '&format=json&count=5&address='. $address .'&genre=' . $genre;
 
         return $this->__sendCurl($url);
     }
