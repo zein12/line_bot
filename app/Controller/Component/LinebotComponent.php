@@ -28,7 +28,7 @@ class LinebotComponent extends Component {
 
 			case 'recommend':
 				$results = $this->Conversation->getQuery($events);
-				$replyMessage = $this->__carouselReplyMessage($results['target_area'], $results['genre_id']);
+				$replyMessage = $this->__carouselReplyMessage($results['target_area'], $results['genre_id'], $events);
 				$this->Conversation->disableStatus($events);
 				break;
 
@@ -72,11 +72,14 @@ class LinebotComponent extends Component {
 		return $textMessageBuilder;
 	}
 
-	private function __carouselReplyMessage($address, $genreId) {
+	private function __carouselReplyMessage($address, $genreId, $events) {
 		$results = $this->ApiCall->getStoreInfo($address, $genreId);	//アドレス, ジャンルを引数に渡せばでる
-		$this->log($results, 'debug');
 		$columns = [];
-
+		if (Hash::get($results, 'results.shop') == null) {
+			$this->log('hit件数0');
+			$this->Conversation->disableStatus($events);
+			return $textMessageBuilder = new TextMessageBuilder('ヒットしませんでした');
+		}
 		foreach ($results['results']['shop'] as $result) {
 			$detail = new PostbackTemplateActionBuilder('詳細', 'action=detail');
 			$browser = new UriTemplateActionBuilder('Open in Browser', $result['urls']['pc']);

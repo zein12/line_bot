@@ -29,6 +29,11 @@ class MecabComponent extends Component {
 				$noun[] = $this->ApiCall->getGenreCode($n->getSurface());
                         }
                 }
+		$noun = array_filter($noun, "strlen");
+		$noun = array_values($noun);
+		if (empty($noun)) {
+			$noun = false;
+		}
 		return $noun;
 	}
 

@@ -14,7 +14,7 @@ class ConversationComponent extends Component {
                 $conversation = $conversationInstance->find('first', [
                         'conditions'=> [
 				'line_id' => $results['id'],
-				'disabled' => 0
+				'Conversation.disabled' => 0
 			],
 		]);
 		switch(Hash::get($conversation, 'Conversation.status')) {
@@ -31,7 +31,9 @@ class ConversationComponent extends Component {
 					$addressInstance->save([
 						'conversation_id' => $id,
 						'target_area' => $areas[0],
-						'message' => $results['message']
+						'message' => $results['message'],
+						'disabled' => 0
+
 					]);
 					$format = 'genre';
 				} else {
@@ -41,14 +43,15 @@ class ConversationComponent extends Component {
 
 			case 'genre':
 				$genre = $this->Mecab->isContainGenre($results['message']);
-				if (!empty($genre)) {
+				if (!empty($genre) && $genre !== false) {
 					$genreInstance = ClassRegistry::init('Genre');
 					$id = Hash::get($conversation, 'Conversation.id');
 					$conversationInstance->save(['id' => $id, 'status' => 'recommend']);
 					$genreInstance->save([
 						'conversation_id' => $id,
 						'genre_id' => $genre[0],
-						'message' => $results['message']
+						'message' => $results['message'],
+						'disabled' => 0
 					]);
 					$format = 'recommend';
 				} else {
@@ -87,8 +90,8 @@ class ConversationComponent extends Component {
 		$conversationInstance = ClassRegistry::init('Conversation');
                 $conversation = $conversationInstance->find('first', [
                         'conditions'=> [
-				'Convesation.line_id' => $id,
-				'Converastion.disabled' => 0,
+				'Conversation.line_id' => $id,
+				'Conversation.disabled' => 0,
 				'Address.disabled' => 0,
 				'Genre.disabled' => 0
 			],
@@ -106,18 +109,20 @@ class ConversationComponent extends Component {
 		$conversation = $conversationInstance->find('first', [
 			'conditions' => [
 				'line_id' => $id,
-				'disabled' => 0
+				'Conversation.disabled' => 0
 			]
 		]);
-		$this->$conversationInstance->id = $conversation['Conversation']['id'];
-		$conversationInstance->save([
+		$conversationInstance->saveAssociated([
 			'Conversation' => [
+				'id' => $conversation['Conversation']['id'],
 				'disabled' => 1
 			],
 			'Address' => [
+				'id' => $conversation['Address']['id'],
 				'disabled' => 1
 			],
 			'Genre' => [
+				'id' => $conversation['Genre']['id'],
 				'disabled' => 1
 			]
 		]);
