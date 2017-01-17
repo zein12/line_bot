@@ -13,15 +13,15 @@ class ApiCallComponent extends Component
     private $apiKey = '280093b7e1baee72';
     private $requestUrl = 'http://webservice.recruit.co.jp/hotpepper/gourmet/v1/?';
 
-    public function getStoreInfo($address = null, $genre = null)
-    {
+    public function getStoreInfo($address, $genre) {
+	$address = urlencode($address);
+	$genre = urlencode($genre);
         $url = $this->requestUrl . 'key=' . $this->apiKey . '&format=json&count=5&address='. $address .'&genre=' . $this->getGenreCode($genre);
 
         return $this->__sendCurl($url);
     }
 
-    private function getGenreCode($keyword)
-    {
+    public function getGenreCode($keyword) {
         $url = 'http://webservice.recruit.co.jp/hotpepper/genre/v1/?key=' . $this->apiKey . '&format=json&keyword=' . urlencode($keyword);
         $results = $this->__sendCurl($url);
 
@@ -30,8 +30,7 @@ class ApiCallComponent extends Component
         }
     }
 
-    private function __sendCurl($url)
-    {
+    private function __sendCurl($url) {
         $options = array(
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,

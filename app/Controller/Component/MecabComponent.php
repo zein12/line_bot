@@ -6,7 +6,7 @@ class MecabComponent extends Component {
 
 	public $components = ['ApiCall'];
 
-	public function __isContainArea($text) {
+	public function isContainArea($text) {
                 $options = ['-d', '/usr/local/lib/mecab/dic/ipadic/'];
                 $mecab = new MeCab_Tagger($options);
                 $nodes = $mecab->parseToNode($text);
@@ -19,17 +19,17 @@ class MecabComponent extends Component {
 		return $areas;
         }
 
-	public function __isContainGenre($text) {
+	public function isContainGenre($text) {
 		$options = ['-d', '/usr/local/lib/mecab/dic/ipadic/'];
                 $mecab = new MeCab_Tagger($options);
                 $nodes = $mecab->parseToNode($text);
+		$nouns = [];
                 foreach ($nodes as $n) {
                         if (strpos($n->getFeature(), '名詞') !== false) {
-				$res = $this->ApiCall->getGenreCode($n->getSurface());
-				$this->log($res, 'debug');
+				$noun[] = $this->ApiCall->getGenreCode($n->getSurface());
                         }
                 }
-		return $areas;
+		return $noun;
 	}
 
 }

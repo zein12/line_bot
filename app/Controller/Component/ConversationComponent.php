@@ -18,17 +18,20 @@ class ConversationComponent extends Component {
 		]);
 		switch(Hash::get($conversation, 'Conversation.status')) {
 			case 'address':
-				$areas = $this->Mecab->__isContainArea($results['message']);
+				$areas = $this->Mecab->isContainArea($results['message']);
 				if (!empty($areas)) {
 					$addressInstance = ClassRegistry::init('Address');
 					$id = Hash::get($conversation, 'Conversation.id');
 					$data = [
 						'id' => $id,
 						'status' => 'genre',
-						'message' => $areas[0]
 					];
 					$conversationInstance->save($data);
-					$addressInstance->save(['conversation_id' => $id, 'message' => $results['message']]);
+					$addressInstance->save([
+						'conversation_id' => $id,
+						'target_area' => $areas[0],
+						'message' => $results['message']
+					]);
 					$format = 'genre';
 				} else {
 					$format = 'address';
@@ -36,11 +39,20 @@ class ConversationComponent extends Component {
 				break;
 
 			case 'genre':
-				$genre = $this->Mecab->__isContainGenre($results['message']);
-				$genreInstance = ClassRegistry::init('Genre');
-	                        $id = Hash::get($conversation, 'Conversation.id');
-				//$format = 'recommend';
-				$format = 'genre';
+				$genre = $this->Mecab->isContainGenre($results['message']);
+				if (!empty($genre)) {
+					$genreInstance = ClassRegistry::init('Genre');
+					$id = Hash::get($conversation, 'Conversation.id');
+					$conversationInstance->save(['id' => $id, 'status' => 'recommend']);
+					$genreInstance->save([
+						'conversation_id' => $id,
+						'genre_id' => $genre[0],
+						'message' => $results['message']
+					]);
+					$format = 'recommend';
+				} else {
+					$format = 'genre';
+				}
 				break;
 
 			default:
@@ -66,5 +78,20 @@ class ConversationComponent extends Component {
 		$id = Hash::get($events, 'events.0.source.' . $type . 'Id' );
 		$message = Hash::get($events, 'events.0.message.text');
 		return ['type' =>$type,  'id' => $id, 'message' => $message];
+	}
+
+	public function getQuery($events) {
+		$type = Hash::get($events, 'events.0.source.type');
+		$id = Hash::get($events, 'events.0.source.' . $type . 'Id' );
+		$conversationInstance = ClassRegistry::init('Conversation');
+                $conversation = $conversationInstance->find('first', [
+                        'conditions'=> [
+				'line_id' => $results['id']
+			],
+		]);
+		return [
+			'address' => $conversation['Address']['address'],
+			'genre_id' => $conversation['Genre']['genre_id']
+		];
 	}
 }

@@ -26,6 +26,11 @@ class LinebotComponent extends Component {
 				$replyMessage = $this->__textReplyMessage($type);
 				break;
 
+			case 'recommend':
+				$results = $this->Conversation->getQuery($events);
+				$replyMessage = $this->__carouselReplyMessage($results['address'], $results['genre_id']);
+				break;
+
 			case 'location':
 				$replyMessage = $this->__locationReplyMessage($events);
 				break;
@@ -66,8 +71,8 @@ class LinebotComponent extends Component {
 		return $textMessageBuilder;
 	}
 
-	private function __carouselReplyMessage($events) {
-		$results = $this->ApiCall->getStoreInfo(null, null);	//アドレス, ジャンルを引数に渡せばでる
+	private function __carouselReplyMessage($address, $genreId) {
+		$results = $this->ApiCall->getStoreInfo($address, $genreId);	//アドレス, ジャンルを引数に渡せばでる
 		$columns = [];
 
 		foreach ($results['results']['shop'] as $result) {
