@@ -23,7 +23,7 @@ class LinebotComponent extends Component {
 				break;
 
 			case 'genre':
-				$replyMessage = $this->__genreReplyMessage($events);
+				$replyMessage = $this->__textReplyMessage($type);
 				break;
 
 			case 'location':
@@ -58,7 +58,11 @@ class LinebotComponent extends Component {
 			case 'address':
 				$textMessageBuilder = new TextMessageBuilder('お店をどこ周辺でお探しですか?');
 				break;
-		}	
+
+			case 'genre':
+				$textMessageBuilder = new TextMessageBuilder('お店のジャンルを教えてください');
+				break;
+		}
 		return $textMessageBuilder;
 	}
 

@@ -12,44 +12,51 @@ class ConversationComponent extends Component {
 		$results = $this->__parseEvents($events);
 		$conversationInstance = ClassRegistry::init('Conversation');
                 $conversation = $conversationInstance->find('first', [
-                        'conditions'=> [ 
-				'line_id' => $results['id'] 
-			], 
+                        'conditions'=> [
+				'line_id' => $results['id']
+			],
 		]);
-                if (!$conversation) {
-			if (strpos($results['message'], 'お腹すいた') !== false) {
-				$data =  [ 
-					'status' => 'address',
-					'talk_type' => $results['type'],
-					'line_id' => $results['id'],
-					'disabled' => 0
-				];
-				$conversationInstance->save($data);
-				$format = 'address';
-			} else {
-				$format = 'not start';
-			}
-                } else if (Hash::get($conversation, 'Conversation.status') == 'address') {
-			$areas = $this->Mecab->__isContainArea($results['message']);
-			$this->log($areas, 'debug');
-			if (!empty($areas)) {
-				$addressInstance = ClassRegistry::init('Address');
-				$id = Hash::get($conversation, 'Conversation.id');
-				$data = [
-					'id' => $id,
-					'status' => 'genre',
-					'message' => $area[0] 
-				];
-				$conversationInstance->save($data);
-				$addressInstance->save(['conversation_id' => $id, 'message' => $results['message']]);
-				//$format = 'genre';
-				$format = 'address';
-			} else {
-				$format = 'address';
-			}	
-		} else if (Hash::get($conversation, 'Conversation.genre') == 'genre') {
-			$genreInstance = ClassRegistry::init('Genre');
-			$format = 'recommend';
+		switch(Hash::get($conversation, 'Conversation.status')) {
+			case 'address':
+				$areas = $this->Mecab->__isContainArea($results['message']);
+				if (!empty($areas)) {
+					$addressInstance = ClassRegistry::init('Address');
+					$id = Hash::get($conversation, 'Conversation.id');
+					$data = [
+						'id' => $id,
+						'status' => 'genre',
+						'message' => $areas[0]
+					];
+					$conversationInstance->save($data);
+					$addressInstance->save(['conversation_id' => $id, 'message' => $results['message']]);
+					$format = 'genre';
+				} else {
+					$format = 'address';
+				}
+				break;
+
+			case 'genre':
+				$genre = $this->Mecab->__isContainGenre($results['message']);
+				$genreInstance = ClassRegistry::init('Genre');
+	                        $id = Hash::get($conversation, 'Conversation.id');
+				//$format = 'recommend';
+				$format = 'genre';
+				break;
+
+			default:
+				if (strpos($results['message'], 'お腹すいた') !== false) {
+					$data =  [
+						'status' => 'address',
+						'talk_type' => $results['type'],
+						'line_id' => $results['id'],
+						'disabled' => 0
+					];
+					$conversationInstance->save($data);
+					$format = 'address';
+				} else {
+					$format = 'not start';
+				}
+				break;
 		}
 		return $format;
         }
