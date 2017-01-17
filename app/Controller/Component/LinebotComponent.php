@@ -29,6 +29,7 @@ class LinebotComponent extends Component {
 			case 'recommend':
 				$results = $this->Conversation->getQuery($events);
 				$replyMessage = $this->__carouselReplyMessage($results['target_area'], $results['genre_id']);
+				$this->Conversation->disableStatus($events);
 				break;
 
 			case 'location':
@@ -73,12 +74,16 @@ class LinebotComponent extends Component {
 
 	private function __carouselReplyMessage($address, $genreId) {
 		$results = $this->ApiCall->getStoreInfo($address, $genreId);	//アドレス, ジャンルを引数に渡せばでる
+		$this->log($results, 'debug');
 		$columns = [];
 
 		foreach ($results['results']['shop'] as $result) {
 			$detail = new PostbackTemplateActionBuilder('詳細', 'action=detail');
 			$browser = new UriTemplateActionBuilder('Open in Browser', $result['urls']['pc']);
 			$maps = new PostbackTemplateActionBuilder('地図を見る', 'action=map&address=' . $result['address'] . '&lat=' . $result['lat'] . '&lng=' . $result['lng']);
+			$result['name'] = mb_strimwidth($result['name'], 0, 40, "...", "UTF-8");
+			$result['catch'] = mb_strimwidth($result['catch'], 0, 40, "...", "UTF-8");
+
 			$column = new CarouselColumnTemplateBuilder($result['name'], $result['catch'], $result['photo']['mobile']['l'], [$detail, $browser, $maps]);
 			$columns[] = $column;
 		}

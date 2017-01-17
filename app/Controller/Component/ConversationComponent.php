@@ -13,7 +13,8 @@ class ConversationComponent extends Component {
 		$conversationInstance = ClassRegistry::init('Conversation');
                 $conversation = $conversationInstance->find('first', [
                         'conditions'=> [
-				'line_id' => $results['id']
+				'line_id' => $results['id'],
+				'disabled' => 0
 			],
 		]);
 		switch(Hash::get($conversation, 'Conversation.status')) {
@@ -86,13 +87,39 @@ class ConversationComponent extends Component {
 		$conversationInstance = ClassRegistry::init('Conversation');
                 $conversation = $conversationInstance->find('first', [
                         'conditions'=> [
-				'line_id' => $id,
-				'disabled' => 0
+				'Convesation.line_id' => $id,
+				'Converastion.disabled' => 0,
+				'Address.disabled' => 0,
+				'Genre.disabled' => 0
 			],
 		]);
 		return [
 			'target_area' => $conversation['Address']['target_area'],
 			'genre_id' => $conversation['Genre']['genre_id']
 		];
+	}
+
+	public function disableStatus($events) {
+		$type = Hash::get($events, 'events.0.source.type');
+		$id = Hash::get($events, 'events.0.source.' . $type . 'Id' );
+		$conversationInstance = ClassRegistry::init('Conversation');
+		$conversation = $conversationInstance->find('first', [
+			'conditions' => [
+				'line_id' => $id,
+				'disabled' => 0
+			]
+		]);
+		$this->$conversationInstance->id = $conversation['Conversation']['id'];
+		$conversationInstance->save([
+			'Conversation' => [
+				'disabled' => 1
+			],
+			'Address' => [
+				'disabled' => 1
+			],
+			'Genre' => [
+				'disabled' => 1
+			]
+		]);
 	}
 }
