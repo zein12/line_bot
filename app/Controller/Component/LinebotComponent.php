@@ -1,6 +1,7 @@
 <?php
 
 App::uses('Component', 'Controller');
+App::uses('RedirectController', 'Controller');
 
 use LINE\LINEBot;
 use LINE\LINEBot\MessageBuilder\TextMessageBuilder;
@@ -73,16 +74,17 @@ class LinebotComponent extends Component {
 	}
 
 	private function __carouselReplyMessage($address, $genreId, $events) {
+		$redirectController = new RedirectController();
 		$results = $this->ApiCall->getStoreInfo($address, $genreId);	//アドレス, ジャンルを引数に渡せばでる
 		$columns = [];
 		if (Hash::get($results, 'results.shop') == null) {
 			$this->log('hit件数0');
 			$this->Conversation->disableStatus($events);
-			return $textMessageBuilder = new TextMessageBuilder('ヒットしませんでした');
+			return $textMessageBuilder = new TextMessageBuilder('その地域ではhitしませんでした');
 		}
 		foreach ($results['results']['shop'] as $result) {
 			$detail = new PostbackTemplateActionBuilder('詳細', 'action=detail');
-			$browser = new UriTemplateActionBuilder('Open in Browser', $result['urls']['pc']);
+			$browser = new UriTemplateActionBuilder('Open in Browser', $redirectController->buildRedirectUrl($result['urls']['pc'], $events));
 			$maps = new PostbackTemplateActionBuilder('地図を見る', 'action=map&address=' . $result['address'] . '&lat=' . $result['lat'] . '&lng=' . $result['lng']);
 			$result['name'] = mb_strimwidth($result['name'], 0, 40, "...", "UTF-8");
 			$result['catch'] = mb_strimwidth($result['catch'], 0, 40, "...", "UTF-8");

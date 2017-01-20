@@ -19,6 +19,8 @@
 	Router::connect('/', array('controller' => 'pages', 'action' => 'display', 'home'));
 
 	Router::connect('/callback', array('controller' => 'callback', 'action' => 'index'));
+
+	Router::connect('/redirect', array('controller' => 'redirect', 'action' => 'index'));
 /**
  * ...and connect the rest of 'Pages' controller's URLs.
  */
