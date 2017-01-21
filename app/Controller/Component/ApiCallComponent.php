@@ -14,11 +14,16 @@ class ApiCallComponent extends Component
     private $requestUrl = 'http://webservice.recruit.co.jp/hotpepper/gourmet/v1/?';
 
     public function getStoreInfo($address, $type, $genre) {
-	    $address = urlencode($address);
-	    if ($type == 'genre') {
-		    $url = $this->requestUrl . 'key=' . $this->apiKey . '&format=json&count=5&address='. $address .'&genre=' . $genre;
+	    if (strpos($address, '駅') !== false) {
+		    $queryType = 'keyword';
 	    } else {
-		    $url = $this->requestUrl . 'key=' . $this->apiKey . '&format=json&count=5&address='. $address . '&food=' . $genre;
+		    $queryType = 'address';
+	    }
+		    $address = urlencode($address);
+	    if ($type == 'genre') {
+		    $url = $this->requestUrl . 'key=' . $this->apiKey . '&format=json&count=5&'. $queryType  . '=' . $address .'&genre=' . $genre;
+	    } else {
+		    $url = $this->requestUrl . 'key=' . $this->apiKey . '&format=json&count=5&'. $queryType . '=' . $address . '&food=' . $genre;
 	    }
 
         return $this->__sendCurl($url);

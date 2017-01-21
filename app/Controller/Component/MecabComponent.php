@@ -16,8 +16,17 @@ class MecabComponent extends Component {
 				$areas[] = $n->getSurface();
                         }
                 }
+		$areas = $this->__checkStation($areas);
 		return $areas;
         }
+
+	private function __checkStation($areas) {
+		if ($areas[1] == '駅') {
+			$areas[0] = $areas[0] . $areas[1];
+		}
+		return $areas;
+	}
+
 
 	public function isContainGenreOrFood($text) {
 		$options = ['-d', '/usr/local/lib/mecab/dic/ipadic/'];

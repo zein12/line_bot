@@ -10,7 +10,6 @@ class ConversationComponent extends Component {
         #メッセージを返すタイプを決める
         public function checkReplyType($events) {
 		$results = $this->__parseEvents($events);
-		$this->log($results, 'debug');
 		$addressInstance = ClassRegistry::init('Address');
 		$genreInstance = ClassRegistry::init('Genre');
 		$conversationInstance = ClassRegistry::init('Conversation');
@@ -20,7 +19,6 @@ class ConversationComponent extends Component {
 				'Conversation.disabled' => 0
 			],
 		]);
-		$this->log(Hash::get($conversation, 'Conversation.status'), 'debug');
 		switch(Hash::get($conversation, 'Conversation.status')) {
 			case 'inquiry':
 				$areas = $this->Mecab->isContainArea($results['message']);
@@ -116,7 +114,6 @@ class ConversationComponent extends Component {
 					$format = 'genre';
 				}
 				break;
-
 			case 'postback':
 				$id = Hash::get($conversation, 'Conversation.id');
 				$format = 'postback';
@@ -124,7 +121,7 @@ class ConversationComponent extends Component {
 				break;
 
 			default:
-				if (strpos($results['message'], '二徹') !== false) {
+				if (strpos($results['message'], '二徹') !== false ||strpos($results['message'], 'にてつ') !== false ) {
 					$data =  [
 						'status' => 'inquiry',
 						'talk_type' => $results['type'],
@@ -151,6 +148,7 @@ class ConversationComponent extends Component {
 		$id = Hash::get($events, 'events.0.source.' . $type . 'Id' );
 		$message = Hash::get($events, 'events.0.message.text');
 		return ['messageType' => $messageType, 'type' =>$type, 'id' => $id, 'message' => $message, 'postbackData' => $postbackData];
+
 	}
 
 	public function getQuery($events) {
