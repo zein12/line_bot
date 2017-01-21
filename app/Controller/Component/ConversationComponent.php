@@ -10,6 +10,7 @@ class ConversationComponent extends Component {
         #メッセージを返すタイプを決める
         public function checkReplyType($events) {
 		$results = $this->__parseEvents($events);
+		$this->log($results, 'debug');
 		$addressInstance = ClassRegistry::init('Address');
 		$genreInstance = ClassRegistry::init('Genre');
 		$conversationInstance = ClassRegistry::init('Conversation');
@@ -19,6 +20,7 @@ class ConversationComponent extends Component {
 				'Conversation.disabled' => 0
 			],
 		]);
+		$this->log(Hash::get($conversation, 'Conversation.status'), 'debug');
 		switch(Hash::get($conversation, 'Conversation.status')) {
 			case 'inquiry':
 				$areas = $this->Mecab->isContainArea($results['message']);
@@ -115,6 +117,12 @@ class ConversationComponent extends Component {
 				}
 				break;
 
+			case 'postback':
+				$id = Hash::get($conversation, 'Conversation.id');
+				$format = 'postback';
+				$conversationInstance->save(['id' => $id, 'status' => $format]);
+				break;
+
 			default:
 				if (strpos($results['message'], '二徹') !== false) {
 					$data =  [
@@ -125,6 +133,8 @@ class ConversationComponent extends Component {
 					];
 					$conversationInstance->save($data);
 					$format = 'inquiry';
+				} else if ($results['messageType'] === 'postback' && $results['postbackData'] !== '') {
+					$format = 'postback';
 				} else {
 					$format = 'not start';
 				}
@@ -134,10 +144,13 @@ class ConversationComponent extends Component {
         }
 
 	private function __parseEvents($events) {
+		$this->log($events, 'debug');
 		$type = Hash::get($events, 'events.0.source.type');
+		$messageType = Hash::get($events, 'events.0.type');
+		$postbackData = Hash::get($events, 'events.0.postback.data');
 		$id = Hash::get($events, 'events.0.source.' . $type . 'Id' );
 		$message = Hash::get($events, 'events.0.message.text');
-		return ['type' =>$type,  'id' => $id, 'message' => $message];
+		return ['messageType' => $messageType, 'type' =>$type, 'id' => $id, 'message' => $message, 'postbackData' => $postbackData];
 	}
 
 	public function getQuery($events) {
