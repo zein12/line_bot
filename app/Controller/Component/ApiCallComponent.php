@@ -13,9 +13,13 @@ class ApiCallComponent extends Component
     private $apiKey = '280093b7e1baee72';
     private $requestUrl = 'http://webservice.recruit.co.jp/hotpepper/gourmet/v1/?';
 
-    public function getStoreInfo($address, $genre) {
-	$address = urlencode($address);
-        $url = $this->requestUrl . 'key=' . $this->apiKey . '&format=json&count=5&address='. $address .'&genre=' . $genre;
+    public function getStoreInfo($address, $type, $genre) {
+	    $address = urlencode($address);
+	    if ($type == 'genre') {
+		    $url = $this->requestUrl . 'key=' . $this->apiKey . '&format=json&count=5&address='. $address .'&genre=' . $genre;
+	    } else {
+		    $url = $this->requestUrl . 'key=' . $this->apiKey . '&format=json&count=5&address='. $address . '&food=' . $genre;
+	    }
 
         return $this->__sendCurl($url);
     }
@@ -27,6 +31,16 @@ class ApiCallComponent extends Component
         foreach ($results as $result) {
             return $result['genre'][0]['code'];
         }
+    }
+
+    public function getFoodCode($keyword) {
+    	$url = 'https://webservice.recruit.co.jp/hotpepper/food/v1/?key=' . $this->apiKey .  '&format=json&keyword=' . urlencode($keyword);
+	$results = $this->__sendCurl($url);
+
+	foreach ($results as $result) {
+		$this->log($result, 'debug');
+		return $result['food'][0]['code'];
+	}
     }
 
     private function __sendCurl($url) {

@@ -22,7 +22,7 @@ class ConversationComponent extends Component {
 		switch(Hash::get($conversation, 'Conversation.status')) {
 			case 'inquiry':
 				$areas = $this->Mecab->isContainArea($results['message']);
-				$genre = $this->Mecab->isContainGenre($results['message']);
+				$genre = $this->Mecab->isContainGenreOrFood($results['message']);
 				$id = Hash::get($conversation, 'Conversation.id');
 				if (!empty($areas) && $genre !== false) {
 					$conversationInstance->save([ 'id' => $id, 'status' => 'recommend' ]);
@@ -34,7 +34,8 @@ class ConversationComponent extends Component {
 					]);
 					$genreInstance->save([
 						'conversation_id' => $id,
-						'genre_id' => $genre[0],
+						'key_type' => $genre['type'],
+						'genre_id' => $genre['id'],
 						'message' => $results['message'],
 						'disabled' => 0
 					]);
@@ -49,7 +50,8 @@ class ConversationComponent extends Component {
 					$conversationInstance->save($data);
 					$genreInstance->save([
 						'conversation_id' => $id,
-						'genre_id' => $genre[0],
+						'key_type' => $genre['type'],
+						'genre_id' => $genre['id'],
 						'message' => $results['message'],
 						'disabled' => 0
 
@@ -95,7 +97,7 @@ class ConversationComponent extends Component {
 				break;
 
 			case 'genre':
-				$genre = $this->Mecab->isContainGenre($results['message']);
+				$genre = $this->Mecab->isContainGenreOrFood($results['message']);
 				if (!empty($genre) && $genre !== false) {
 					$genreInstance = ClassRegistry::init('Genre');
 					$id = Hash::get($conversation, 'Conversation.id');
@@ -103,7 +105,8 @@ class ConversationComponent extends Component {
 					$conversationInstance->save(['id' => $id, 'status' => $format]);
 					$genreInstance->save([
 						'conversation_id' => $id,
-						'genre_id' => $genre[0],
+						'genre_id' => $genre['id'],
+						'key_type' => $genre['type'],
 						'message' => $results['message'],
 						'disabled' => 0
 					]);
@@ -113,7 +116,7 @@ class ConversationComponent extends Component {
 				break;
 
 			default:
-				if (strpos($results['message'], 'お腹すいた') !== false) {
+				if (strpos($results['message'], '二徹') !== false) {
 					$data =  [
 						'status' => 'inquiry',
 						'talk_type' => $results['type'],
@@ -151,6 +154,7 @@ class ConversationComponent extends Component {
 		]);
 		return [
 			'target_area' => $conversation['Address']['target_area'],
+			'key_type' => $conversation['Genre']['key_type'],
 			'genre_id' => $conversation['Genre']['genre_id']
 		];
 	}

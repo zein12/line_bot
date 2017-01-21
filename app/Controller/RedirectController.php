@@ -8,7 +8,6 @@ class RedirectController extends AppController {
 		$link = $this->Redirect->find('first', [
 			'conditions' => [
 				'id' => $id,
-				'access_flag' => 0
 			]
 		]);
 		if (empty($link)) {
