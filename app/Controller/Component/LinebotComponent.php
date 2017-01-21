@@ -18,6 +18,7 @@ class LinebotComponent extends Component {
 
 	public function buildReplyMessage($events) {
 		$type = $this->Conversation->checkReplyType($events);
+		$this->log('LinebotComponent [type] ' . $type, 'debug');
 		switch ($type) {
 			case 'inquiry':
 				$replyMessage = $this->__textReplyMessage($type);
@@ -55,10 +56,11 @@ class LinebotComponent extends Component {
 				$replyMessage = false;
 				break;
 
+			case 'postback':
+				$replyMessage = $this->__postbackReplyMessage($events);
+				break;
+
 			default:
-				if (Hash::get($events, 'events.0.type') === 'postback') {
-					$replyMessage = $this->__postbackReplyMessage($events);
-				}
 				break;
 		}
 		return $replyMessage;
@@ -93,14 +95,12 @@ class LinebotComponent extends Component {
 			return $textMessageBuilder = new TextMessageBuilder('その地域ではhitしませんでした');
 		}
 		foreach ($results['results']['shop'] as $result) {
-			$detail = new PostbackTemplateActionBuilder('詳細', 'action=detail');
-			$browser = new UriTemplateActionBuilder('Open in Browser', $redirectController->buildRedirectUrl($result['urls']['pc'], $events));
+			$detail = new PostbackTemplateActionBuilder('詳細', 'action=detail&name=' . $result['name'] . '&catch=' . $result['catch'] . '&aveBudget=' . $result['budget']['average'] . '&access=' . $result['access']);
+			$browser = new UriTemplateActionBuilder('ブラウザで開く', $redirectController->buildRedirectUrl($result['urls']['pc'], $events));
 			$maps = new PostbackTemplateActionBuilder('地図を見る', 'action=map&address=' . $result['address'] . '&lat=' . $result['lat'] . '&lng=' . $result['lng']);
 			$result['name'] = mb_strimwidth($result['name'], 0, 40, '', 'UTF-8');
 			$result['catch'] = mb_strimwidth($result['catch'], 0, 30, '', 'UTF-8');
 			$text = mb_strimwidth($result['catch'] . "\r\n【予算】" . $result['budget']['average'] . "\r\n【アクセス】" . $result['access'], 0, 90, '...', 'UTF-8');
-			$result['name'] = mb_strimwidth($result['name'], 0, 40, "...", "UTF-8");
-			$result['catch'] = mb_strimwidth($result['catch'], 0, 40, "...", "UTF-8");
 
 			$column = new CarouselColumnTemplateBuilder($result['name'], $text, $result['photo']['mobile']['l'], [$detail, $browser, $maps]);
 			$columns[] = $column;
@@ -122,7 +122,7 @@ class LinebotComponent extends Component {
 				break;
 
 			case 'detail':
-				$postback = new TextMessageBuilder('予算とか細かいの載せる');
+				$postback = new TextMessageBuilder($data['name'] . "\r\n\r\n" . $data['catch'] . "\r\n\r\n【平均予算】" . $data['aveBudget'] . "\r\n【アクセス】" . $data['access']);
 				break;
 		}
 
