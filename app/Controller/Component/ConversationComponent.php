@@ -120,6 +120,8 @@ class ConversationComponent extends Component {
 				$conversationInstance->save(['id' => $id, 'status' => $format]);
 				break;
 
+
+
 			default:
 				if (strpos($results['message'], '二徹') !== false ||strpos($results['message'], 'にてつ') !== false ) {
 					$data =  [
@@ -131,6 +133,7 @@ class ConversationComponent extends Component {
 					$conversationInstance->save($data);
 					$format = 'inquiry';
 				} else if ($results['messageType'] === 'postback' && $results['postbackData'] !== '') {
+					$this->log($results, 'debug');
 					$format = 'postback';
 				} else {
 					$format = 'not start';
@@ -141,7 +144,6 @@ class ConversationComponent extends Component {
         }
 
 	private function __parseEvents($events) {
-		$this->log($events, 'debug');
 		$type = Hash::get($events, 'events.0.source.type');
 		$messageType = Hash::get($events, 'events.0.type');
 		$postbackData = Hash::get($events, 'events.0.postback.data');
