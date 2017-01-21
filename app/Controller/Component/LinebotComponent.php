@@ -33,7 +33,7 @@ class LinebotComponent extends Component {
 
 			case 'recommend':
 				$results = $this->Conversation->getQuery($events);
-				$replyMessage = $this->__carouselReplyMessage($results['target_area'], $results['genre_id'], $events);
+				$replyMessage = $this->__carouselReplyMessage($results['target_area'], $results['key_type'], $results['genre_id'], $events);
 				$this->Conversation->disableStatus($events);
 				break;
 
@@ -67,7 +67,6 @@ class LinebotComponent extends Component {
 	private function __textReplyMessage($type) {
 		switch ($type) {
 			case 'inquiry':
-
 				$textMessageBuilder = new TextMessageBuilder("どんなお店を探していますか? \r\n (例: 渋谷駅でイタリアン)");
 				break;
 
@@ -83,13 +82,12 @@ class LinebotComponent extends Component {
 		return $textMessageBuilder;
 	}
 
-	private function __carouselReplyMessage($address, $genreId, $events) {
+	private function __carouselReplyMessage($address, $type, $genreId, $events) {
 		$redirectController = new RedirectController();
-		$results = $this->ApiCall->getStoreInfo($address, $genreId);	//アドレス, ジャンルを引数に渡せばでる
+		$results = $this->ApiCall->getStoreInfo($address, $type, $genreId);	//アドレス, ジャンルを引数に渡せばでる
 		$columns = [];
 		if (Hash::get($results, 'results.shop') == null) {
 			$this->log('hit件数0');
-			$this->Conversation->disableStatus($events);
 			return $textMessageBuilder = new TextMessageBuilder('その地域ではhitしませんでした');
 		}
 		foreach ($results['results']['shop'] as $result) {
