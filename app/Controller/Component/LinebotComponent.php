@@ -69,15 +69,15 @@ class LinebotComponent extends Component {
 	private function __textReplyMessage($type) {
 		switch ($type) {
 			case 'inquiry':
-				$textMessageBuilder = new TextMessageBuilder("どんなお店を探していますか? \r\n (例: 渋谷駅でイタリアン)");
+				$textMessageBuilder = new TextMessageBuilder("どこ?何食べたいの? ｸﾞｱ\r\n (例: 渋谷駅でイタリアン)");
 				break;
 
 			case 'genre':
-				$textMessageBuilder = new TextMessageBuilder("ジャンルを教えてください:) ");
+				$textMessageBuilder = new TextMessageBuilder("何食べたいの? ｸﾞｱ");
 				break;
 
 			case 'address':
-				$textMessageBuilder = new TextMessageBuilder("場所を教えてください:) ");
+				$textMessageBuilder = new TextMessageBuilder("どこで食べるの? ｸﾞｱ");
 				break;
 
 		}
@@ -90,7 +90,7 @@ class LinebotComponent extends Component {
 		$columns = [];
 		if (Hash::get($results, 'results.shop') == null) {
 			$this->log('hit件数0');
-			return $textMessageBuilder = new TextMessageBuilder('その地域ではhitしませんでした');
+			return $textMessageBuilder = new TextMessageBuilder('見つかんなかったぞ ｸﾞｧ');
 		}
 		foreach ($results['results']['shop'] as $result) {
 			$detail = new PostbackTemplateActionBuilder('詳細', 'action=detail&name=' . $result['name'] . '&catch=' . $result['catch'] . '&aveBudget=' . $result['budget']['average'] . '&access=' . $result['access']);
