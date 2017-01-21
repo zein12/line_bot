@@ -19,6 +19,10 @@ class LinebotComponent extends Component {
 	public function buildReplyMessage($events) {
 		$type = $this->Conversation->checkReplyType($events);
 		switch ($type) {
+			case 'inquiry':
+				$replyMessage = $this->__textReplyMessage($type);
+				break;
+
 			case 'address':
 				$replyMessage = $this->__textReplyMessage($type);
 				break;
@@ -62,13 +66,19 @@ class LinebotComponent extends Component {
 
 	private function __textReplyMessage($type) {
 		switch ($type) {
-			case 'address':
-				$textMessageBuilder = new TextMessageBuilder('お店をどこ周辺でお探しですか?');
+			case 'inquiry':
+
+				$textMessageBuilder = new TextMessageBuilder("どんなお店を探していますか? \r\n (例: 渋谷駅でイタリアン)");
 				break;
 
 			case 'genre':
-				$textMessageBuilder = new TextMessageBuilder('お店のジャンルを教えてください');
+				$textMessageBuilder = new TextMessageBuilder("ジャンルを教えてください:) ");
 				break;
+
+			case 'address':
+				$textMessageBuilder = new TextMessageBuilder("場所を教えてください:) ");
+				break;
+
 		}
 		return $textMessageBuilder;
 	}
@@ -86,10 +96,13 @@ class LinebotComponent extends Component {
 			$detail = new PostbackTemplateActionBuilder('詳細', 'action=detail');
 			$browser = new UriTemplateActionBuilder('Open in Browser', $redirectController->buildRedirectUrl($result['urls']['pc'], $events));
 			$maps = new PostbackTemplateActionBuilder('地図を見る', 'action=map&address=' . $result['address'] . '&lat=' . $result['lat'] . '&lng=' . $result['lng']);
+			$result['name'] = mb_strimwidth($result['name'], 0, 40, '', 'UTF-8');
+			$result['catch'] = mb_strimwidth($result['catch'], 0, 30, '', 'UTF-8');
+			$text = mb_strimwidth($result['catch'] . "\r\n【予算】" . $result['budget']['average'] . "\r\n【アクセス】" . $result['access'], 0, 90, '...', 'UTF-8');
 			$result['name'] = mb_strimwidth($result['name'], 0, 40, "...", "UTF-8");
 			$result['catch'] = mb_strimwidth($result['catch'], 0, 40, "...", "UTF-8");
 
-			$column = new CarouselColumnTemplateBuilder($result['name'], $result['catch'], $result['photo']['mobile']['l'], [$detail, $browser, $maps]);
+			$column = new CarouselColumnTemplateBuilder($result['name'], $text, $result['photo']['mobile']['l'], [$detail, $browser, $maps]);
 			$columns[] = $column;
 		}
 

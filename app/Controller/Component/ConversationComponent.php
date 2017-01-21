@@ -10,6 +10,8 @@ class ConversationComponent extends Component {
         #メッセージを返すタイプを決める
         public function checkReplyType($events) {
 		$results = $this->__parseEvents($events);
+		$addressInstance = ClassRegistry::init('Address');
+		$genreInstance = ClassRegistry::init('Genre');
 		$conversationInstance = ClassRegistry::init('Conversation');
                 $conversation = $conversationInstance->find('first', [
                         'conditions'=> [
@@ -18,11 +20,42 @@ class ConversationComponent extends Component {
 			],
 		]);
 		switch(Hash::get($conversation, 'Conversation.status')) {
-			case 'address':
+			case 'inquiry':
 				$areas = $this->Mecab->isContainArea($results['message']);
-				if (!empty($areas)) {
-					$addressInstance = ClassRegistry::init('Address');
-					$id = Hash::get($conversation, 'Conversation.id');
+				$genre = $this->Mecab->isContainGenre($results['message']);
+				$id = Hash::get($conversation, 'Conversation.id');
+				if (!empty($areas) && $genre !== false) {
+					$conversationInstance->save([ 'id' => $id, 'status' => 'recommend' ]);
+					$addressInstance->save([
+						'conversation_id' => $id,
+						'target_area' => $areas[0],
+						'message' => $results['message'],
+						'disabled' => 0
+					]);
+					$genreInstance->save([
+						'conversation_id' => $id,
+						'genre_id' => $genre[0],
+						'message' => $results['message'],
+						'disabled' => 0
+					]);
+					$format = 'recommend';
+				} else if (empty($areas) && $genre == false) {
+					$format = 'inquiry';
+				} else if (empty($areas)) {
+					$data = [
+						'id' => $id,
+						'status' => 'address',
+					];
+					$conversationInstance->save($data);
+					$genreInstance->save([
+						'conversation_id' => $id,
+						'genre_id' => $genre[0],
+						'message' => $results['message'],
+						'disabled' => 0
+
+					]);
+					$format = 'address';
+				} else if ($genre == false) {
 					$data = [
 						'id' => $id,
 						'status' => 'genre',
@@ -33,9 +66,29 @@ class ConversationComponent extends Component {
 						'target_area' => $areas[0],
 						'message' => $results['message'],
 						'disabled' => 0
-
 					]);
 					$format = 'genre';
+				}
+				break;
+
+			case 'address':
+				$areas = $this->Mecab->isContainArea($results['message']);
+				if (!empty($areas)) {
+					$addressInstance = ClassRegistry::init('Address');
+					$id = Hash::get($conversation, 'Conversation.id');
+					$format = (!empty($conversation['Genre']['genre_id']))? 'recommend' : 'genre';
+					$data = [
+						'id' => $id,
+						'status' => $format,
+					];
+					$conversationInstance->save($data);
+					$addressInstance->save([
+						'conversation_id' => $id,
+						'target_area' => $areas[0],
+						'message' => $results['message'],
+						'disabled' => 0
+
+					]);
 				} else {
 					$format = 'address';
 				}
@@ -46,14 +99,14 @@ class ConversationComponent extends Component {
 				if (!empty($genre) && $genre !== false) {
 					$genreInstance = ClassRegistry::init('Genre');
 					$id = Hash::get($conversation, 'Conversation.id');
-					$conversationInstance->save(['id' => $id, 'status' => 'recommend']);
+					$format = (!empty($conversation['Address']['target_area']))? 'recommend' : 'address';
+					$conversationInstance->save(['id' => $id, 'status' => $format]);
 					$genreInstance->save([
 						'conversation_id' => $id,
 						'genre_id' => $genre[0],
 						'message' => $results['message'],
 						'disabled' => 0
 					]);
-					$format = 'recommend';
 				} else {
 					$format = 'genre';
 				}
@@ -62,13 +115,13 @@ class ConversationComponent extends Component {
 			default:
 				if (strpos($results['message'], 'お腹すいた') !== false) {
 					$data =  [
-						'status' => 'address',
+						'status' => 'inquiry',
 						'talk_type' => $results['type'],
 						'line_id' => $results['id'],
 						'disabled' => 0
 					];
 					$conversationInstance->save($data);
-					$format = 'address';
+					$format = 'inquiry';
 				} else {
 					$format = 'not start';
 				}
