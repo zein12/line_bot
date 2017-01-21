@@ -13,6 +13,9 @@ class ConversationComponent extends Component {
 		$addressInstance = ClassRegistry::init('Address');
 		$genreInstance = ClassRegistry::init('Genre');
 		$conversationInstance = ClassRegistry::init('Conversation');
+		if (strpos($results['message'], '二徹') !== false ||strpos($results['message'], 'にてつ') !== false ) {
+			$this->disableStatus($events);
+		}
                 $conversation = $conversationInstance->find('first', [
                         'conditions'=> [
 				'line_id' => $results['id'],
@@ -114,6 +117,12 @@ class ConversationComponent extends Component {
 					$format = 'genre';
 				}
 				break;
+			case 'recommend':
+				$adverbs = $this->Mecab->isContainWord($results['message']);
+				$format = 'recommend';
+				$format['adverbs'] = $adverbs;
+				break;
+
 			case 'postback':
 				$id = Hash::get($conversation, 'Conversation.id');
 				$format = 'postback';

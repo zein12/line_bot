@@ -6,6 +6,20 @@ class MecabComponent extends Component {
 
 	public $components = ['ApiCall'];
 
+	public function isContainAdverb($text) {
+		$options = ['-d', '/usr/local/lib/mecab/dic/ipadic/'];
+                $mecab = new MeCab_Tagger($options);
+                $nodes = $mecab->parseToNode($text);
+		$adverbs = [];
+                foreach ($nodes as $n) {
+                        if (strpos($n->getFeature(), '副詞') !== false) {
+				$adverbs[] = $n->getSurface();
+                        }
+                }
+
+		return $adverbs;
+	}
+
 	public function isContainArea($text) {
                 $options = ['-d', '/usr/local/lib/mecab/dic/ipadic/'];
                 $mecab = new MeCab_Tagger($options);
