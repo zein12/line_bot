@@ -8,7 +8,7 @@ class ConversationComponent extends Component {
 	public $uses = ['Genre', 'Address', 'Conversation'];
 
         #メッセージを返すタイプを決める
-        public function checkReplyType($events) {
+	public function checkReplyType($events) {
 		$results = $this->__parseEvents($events);
 		$conversationInstance = ClassRegistry::init('Conversation');
                 $conversation = $conversationInstance->find('first', [
@@ -59,16 +59,44 @@ class ConversationComponent extends Component {
 				}
 				break;
 
+			case 'button':
+				//ボタンごとにフォーマット変える
+				$id = Hash::get($conversation, 'Conversation.id');
+				$query = Hash::get($events, 'events.0.postback.data');
+				parse_str($query, $data);
+
+				switch ($data['action']) {
+					case 'viewFavorite':
+						$conversationInstance->save(['id' => $id, 'status' => 'viewFavorite']);
+						$format = 'viewFavorite';
+						break;
+
+					case 'viewShops':
+						$conversationInstance->save(['id' => $id, 'status' => 'viewShops']);
+						$format = 'viewShops';
+						break;
+
+					case 'cancel':
+						$conversationInstance->save(['id' => $id, 'status' => 'not start']);
+						$format = 'not start';
+						break;
+
+					default:
+						$format = 'button';
+						break;
+				}
+				break;
+
 			default:
 				if (strpos($results['message'], 'お腹すいた') !== false) {
 					$data =  [
-						'status' => 'address',
+						'status' => 'button',
 						'talk_type' => $results['type'],
 						'line_id' => $results['id'],
 						'disabled' => 0
 					];
 					$conversationInstance->save($data);
-					$format = 'address';
+					$format = 'button';
 				} else {
 					$format = 'not start';
 				}

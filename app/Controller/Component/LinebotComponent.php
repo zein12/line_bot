@@ -4,13 +4,15 @@ App::uses('Component', 'Controller');
 
 use LINE\LINEBot;
 use LINE\LINEBot\MessageBuilder\TextMessageBuilder;
+use LINE\LINEBot\MessageBuilder\TemplateMessageBuilder;
+use LINE\LINEBot\MessageBuilder\LocationMessageBuilder;
+use LINE\LINEBot\MessageBuilder\TemplateBuilder\ButtonTemplateBuilder;
+use LINE\LINEBot\MessageBuilder\TemplateBuilder\CarouselColumnTemplateBuilder;
+use LINE\LINEBot\MessageBuilder\TemplateBuilder\CarouselTemplateBuilder;
+use LINE\LINEBot\TemplateActionBuilder;
 use LINE\LINEBot\TemplateActionBuilder\MessageTemplateActionBuilder;
 use LINE\LINEBot\TemplateActionBuilder\UriTemplateActionBuilder;
 use LINE\LINEBot\TemplateActionBuilder\PostbackTemplateActionBuilder;
-use LINE\LINEBot\MessageBuilder\TemplateBuilder\CarouselColumnTemplateBuilder;
-use LINE\LINEBot\MessageBuilder\TemplateBuilder\CarouselTemplateBuilder;
-use LINE\LINEBot\MessageBuilder\TemplateMessageBuilder;
-use LINE\LINEBot\MessageBuilder\LocationMessageBuilder;
 
 class LinebotComponent extends Component {
 	public $components = ['Mecab', 'ApiCall', 'Conversation'];
@@ -23,6 +25,10 @@ class LinebotComponent extends Component {
 				break;
 
 			case 'genre':
+				$replyMessage = $this->__textReplyMessage($type);
+				break;
+
+			case 'button':
 				$replyMessage = $this->__textReplyMessage($type);
 				break;
 
@@ -50,6 +56,16 @@ class LinebotComponent extends Component {
 				$replyMessage = false;
 				break;
 
+			case 'viewFavorite':
+				$replyMessage = new TextMessageBuilder('お気に入り');
+				$this->Conversation->disableStatus($events);
+				break;
+
+			case 'viewShops':
+				$replyMessage = new TextMessageBuilder('お店を探す');
+				$this->Conversation->disableStatus($events);
+				break;
+
 			default:
 				if (Hash::get($events, 'events.0.type') === 'postback') {
 					$replyMessage = $this->__postbackReplyMessage($events);
@@ -62,14 +78,22 @@ class LinebotComponent extends Component {
 	private function __textReplyMessage($type) {
 		switch ($type) {
 			case 'address':
-				$textMessageBuilder = new TextMessageBuilder('お店をどこ周辺でお探しですか?');
+				$message = new TextMessageBuilder('お店をどこ周辺でお探しですか?');
 				break;
 
 			case 'genre':
-				$textMessageBuilder = new TextMessageBuilder('お店のジャンルを教えてください');
+				$message = new TextMessageBuilder('お店のジャンルを教えてください');
+				break;
+
+			case 'button':
+				$viewFavorite = new PostbackTemplateActionBuilder('お気に入りを見る', 'action=viewFavorite');
+				$viewShops = new PostbackTemplateActionBuilder('お店を探す', 'action=viewShops');
+				$cancel = new PostbackTemplateActionBuilder('キャンセル', 'action=cancel');
+				$buttonTemplateBuilder = new ButtonTemplateBuilder(null, 'お手伝いしましょうか？', null, [$viewFavorite, $viewShops, $cancel]);
+				$message = new TemplateMessageBuilder('PCからの表示は対応していません', $buttonTemplateBuilder);
 				break;
 		}
-		return $textMessageBuilder;
+		return $message;
 	}
 
 	private function __carouselReplyMessage($address, $genreId, $events) {
@@ -84,10 +108,11 @@ class LinebotComponent extends Component {
 			$detail = new PostbackTemplateActionBuilder('詳細', 'action=detail');
 			$browser = new UriTemplateActionBuilder('Open in Browser', $result['urls']['pc']);
 			$maps = new PostbackTemplateActionBuilder('地図を見る', 'action=map&address=' . $result['address'] . '&lat=' . $result['lat'] . '&lng=' . $result['lng']);
-			$result['name'] = mb_strimwidth($result['name'], 0, 40, "...", "UTF-8");
-			$result['catch'] = mb_strimwidth($result['catch'], 0, 40, "...", "UTF-8");
+			$result['name'] = mb_strimwidth($result['name'], 0, 40, '', 'UTF-8');
+			$result['catch'] = mb_strimwidth($result['catch'], 0, 30, '', 'UTF-8');
+			$text = mb_strimwidth($result['catch'] . "\r\n【予算】" . $result['budget']['average'] . "\r\n【アクセス】" . $result['access'], 0, 90, '...', 'UTF-8');
 
-			$column = new CarouselColumnTemplateBuilder($result['name'], $result['catch'], $result['photo']['mobile']['l'], [$detail, $browser, $maps]);
+			$column = new CarouselColumnTemplateBuilder($result['name'], $text, $result['photo']['mobile']['l'], [$detail, $browser, $maps]);
 			$columns[] = $column;
 		}
 
