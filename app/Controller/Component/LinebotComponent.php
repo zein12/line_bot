@@ -2,6 +2,7 @@
 
 App::uses('Component', 'Controller');
 App::uses('RedirectController', 'Controller');
+App::uses('ReservationController', 'Controller');
 
 use LINE\LINEBot;
 use LINE\LINEBot\MessageBuilder\TextMessageBuilder;
@@ -94,7 +95,7 @@ class LinebotComponent extends Component {
 			return $textMessageBuilder = new TextMessageBuilder('見つかりませんでした👐');
 		}
 		foreach ($results['results']['shop'] as $result) {
-			$detail = new PostbackTemplateActionBuilder('詳細', 'action=detail&name=' . $result['name'] . '&catch=' . $result['catch'] . '&aveBudget=' . $result['budget']['average'] . '&access=' . $result['access']);
+			$detail = new PostbackTemplateActionBuilder('予約する', 'action=reserv&name=' . $result['name'] . '&catch=' . $result['catch'] . '&aveBudget=' . $result['budget']['average'] . '&access=' . $result['access']);
 			$browser = new UriTemplateActionBuilder('ブラウザで開く', $redirectController->buildRedirectUrl($result['urls']['pc'], $events));
 			$maps = new PostbackTemplateActionBuilder('地図を見る', 'action=map&address=' . $result['address'] . '&lat=' . $result['lat'] . '&lng=' . $result['lng']);
 			$result['name'] = mb_strimwidth($result['name'], 0, 40, '', 'UTF-8');
@@ -120,6 +121,8 @@ class LinebotComponent extends Component {
 	}
 
 	private function __postbackReplyMessage($events) {
+		$this->log($events, 'debug');
+		$reservation = ClassRegistry::init('Reservation');
 		$query = Hash::get($events, 'events.0.postback.data');
                 parse_str($query, $data);
 
@@ -128,8 +131,15 @@ class LinebotComponent extends Component {
 				$postback = new LocationMessageBuilder('お店の地図を表示します', $data['address'], $data['lat'], $data['lng']);
 				break;
 
-			case 'detail':
-				$postback = new TextMessageBuilder($data['name'] . "\r\n\r\n" . $data['catch'] . "\r\n\r\n【平均予算】" . $data['aveBudget'] . "\r\n【アクセス】" . $data['access']);
+			case 'reserv':
+				$reservation->save([
+					'talk_type' => Hash::get($events, 'events.0.source.type'),
+					'line_id' => Hash::get($events, 'events.0.source.groupId'),
+					'tel' => null,
+					'status' => 'waiting',
+					'disabled' => 0,
+				]);
+				$postback = new TextMessageBuilder('予約確認中です📅"予約でき次第ご連絡します💏');
 				break;
 		}
 
