@@ -12,6 +12,7 @@ use LINE\LINEBot\MessageBuilder\TemplateBuilder\CarouselColumnTemplateBuilder;
 use LINE\LINEBot\MessageBuilder\TemplateBuilder\CarouselTemplateBuilder;
 use LINE\LINEBot\MessageBuilder\TemplateMessageBuilder;
 use LINE\LINEBot\MessageBuilder\LocationMessageBuilder;
+use LINE\LINEBot\MessageBuilder\MultiMessageBuilder;
 
 class LinebotComponent extends Component {
 	public $components = ['Mecab', 'ApiCall', 'Conversation'];
@@ -69,15 +70,15 @@ class LinebotComponent extends Component {
 	private function __textReplyMessage($type) {
 		switch ($type) {
 			case 'inquiry':
-				$textMessageBuilder = new TextMessageBuilder("どこ?何食べたいの? ｸﾞｱ\r\n (例: 渋谷駅でイタリアン)");
+				$textMessageBuilder = new TextMessageBuilder("探したい場所🗺と食べ物🍴を送ってね\r\n (例: 渋谷駅でイタリアン)");
 				break;
 
 			case 'genre':
-				$textMessageBuilder = new TextMessageBuilder("何食べたいの? ｸﾞｱ");
+				$textMessageBuilder = new TextMessageBuilder("何が食べたいですか？🍣");
 				break;
 
 			case 'address':
-				$textMessageBuilder = new TextMessageBuilder("どこで食べるの? ｸﾞｱ");
+				$textMessageBuilder = new TextMessageBuilder("どこでご飯食べたいですか？👶");
 				break;
 
 		}
@@ -90,7 +91,7 @@ class LinebotComponent extends Component {
 		$columns = [];
 		if (Hash::get($results, 'results.shop') == null) {
 			$this->log('hit件数0');
-			return $textMessageBuilder = new TextMessageBuilder('見つかんなかったぞ ｸﾞｧ');
+			return $textMessageBuilder = new TextMessageBuilder('見つかりませんでした👐');
 		}
 		foreach ($results['results']['shop'] as $result) {
 			$detail = new PostbackTemplateActionBuilder('詳細', 'action=detail&name=' . $result['name'] . '&catch=' . $result['catch'] . '&aveBudget=' . $result['budget']['average'] . '&access=' . $result['access']);
@@ -104,10 +105,18 @@ class LinebotComponent extends Component {
 			$columns[] = $column;
 		}
 
+		$multiMessage = new MultiMessageBuilder();
 		$carousel = new CarouselTemplateBuilder($columns);
 		$carousel_message = new TemplateMessageBuilder("PCからの表示は対応していません", $carousel);
 
-		return $carousel_message;
+		$textMessage['first'] = new TextMessageBuilder('こんなお店が見つかったよ🌞');
+		$textMessage['last'] = new TextMessageBuilder('もっと探したいときはまた呼んでね💕');
+		$multiMessage->add($textMessage['first']);
+		$multiMessage->add($carousel_message);
+		$multiMessage->add($textMessage['last']);
+
+
+		return $multiMessage;
 	}
 
 	private function __postbackReplyMessage($events) {
